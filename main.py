@@ -1,6 +1,7 @@
 import tensorflow as tf
 import pandas as pd
 import matplotlib.pyplot as plt
+from keras import regularizers
 from matplotlib.cm import get_cmap
 from numpy import linspace, meshgrid, c_
 from sklearn.linear_model import LogisticRegression
@@ -26,6 +27,7 @@ def plot_model_out(x,y,model):
   outs = model.predict(grid)
   y1 = outs.T[0].reshape(x.shape[0],x.shape[0])
   plt.contourf(x,y,y1)
+  plt.plot()
   plt.show()
 
 def load_data(path):
@@ -57,9 +59,10 @@ def plot_boundary(clf, X, y, grid_step=.01, poly_featurizer=None):
 
     # каждой точке в сетке [x_min, m_max]x[y_min, y_max]
     # ставим в соответствие свой цвет
-    Z = clf.predict(poly_featurizer.transform(np.c_[xx.ravel(), yy.ravel()]))
+    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
     Z = Z.reshape(xx.shape)
     plt.contour(xx, yy, Z, cmap=plt.cm.Paired)
+    plt.show()
 
 
 def plot_decision_boundary(X, y, model, steps=1000, cmap='Paired'):
@@ -114,14 +117,14 @@ def main():
     # nm = layers.Normalization(input_shape=[1 ], axis=None)
     # nm.adapt(num_features)
     model = tf.keras.models.Sequential([
-
-        tf.keras.layers.Dense(units=1, activation=tf.nn.softmax)# activation = 'sigmoid'
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(units=1, activation=tf.nn.sigmoid)# activation = 'sigmoid'
     ])
 
     model.compile(optimizer='sgd',
-                  loss='sparse_categorical_crossentropy',
+                  loss='binary_crossentropy',
                   metrics=['accuracy'])
-    model.fit(X1, y1, epochs=10)
+    model.fit(X1, y1, epochs=512)
     a = model.evaluate(test_X, test_Y)
     print(a)
     print(model.metrics_names)
@@ -138,18 +141,40 @@ def lr():
     logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
     logit.fit(X, y)
 
-    # plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=poly)
+    plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=None)
 
-    # plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='Выпущен')
-    # plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='Бракован')
-    # plt.xlabel("Тест 1")
-    # plt.ylabel("Тест 2")
-    # plt.title('2 теста микрочипов. Логит с C=0.01')
-    # plt.legend();
+    plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='Выпущен')
+    plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='Бракован')
+    plt.xlabel("Тест 1")
+    plt.ylabel("Тест 2")
+    plt.title('2 теста микрочипов. Логит с C=0.01')
+    plt.legend();
 
     print("Доля правильных ответов классификатора на обучающей выборке:",
           round(logit.score(X, y), 3))
 
     print(logit.predict(X))
 
-main()
+
+def kd_model():
+    x, y = load_data('ex2data1.txt')
+
+    train_X, test_X, test_Y, train_Y = train_test_split(x, y, random_state=15, test_size=0.5)
+
+    from keras.regularizers import l1_l2
+
+    reg = l1_l2(l1=0.01, l2=0.1)
+
+    model = tf.keras.models.Sequential()
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, input_dim=x.shape[1],
+                                    kernel_regularizer=regularizers.L1(0.00001),
+                                    activity_regularizer=regularizers.L2(0.000001)))
+    model.compile(optimizer='rmsprop', loss='binary_crossentropy')
+    model.fit(train_X, train_Y, epochs=100, verbose=1)
+    ans = model.predict(test_X)
+    print(ans)
+    fig, ax = plot_decision_boundary(x, y, model)
+    fig.savefig("output.png")
+
+lr()

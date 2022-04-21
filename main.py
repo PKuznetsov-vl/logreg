@@ -17,20 +17,6 @@ from tensorflow.keras import layers
 
 
 
-def plot_model_out(x,y,model):
-  """
-  x,y: 2D MeshGrid input
-  model: Keras Model API Object
-  """
- #y=np.c_[y, np.zeros(len(y))]
-  #print(y)
-  grid = np.stack((x,y))
-  grid = grid.T.reshape(-1,2)
-  outs = model.predict(grid)
-  y1 = outs.T[0].reshape(x.shape[0],x.shape[0])
-  plt.contourf(x,y,y1)
-  plt.plot()
-  plt.show()
 
 def load_data(path):
     data = pd.read_csv(path,
@@ -196,7 +182,8 @@ def kd_model():
     print(ans.ravel())
     #fig, ax = plot_decision_boundary(X=x, y=y, model=model,poly_featurizer=poly)
     #fig.savefig("output.png")
-    plot_boundary(model, x, y, grid_step=.01, poly_featurizer=poly)
+
+
 
 
 #lr()

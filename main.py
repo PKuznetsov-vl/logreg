@@ -22,6 +22,8 @@ def plot_model_out(x,y,model):
   x,y: 2D MeshGrid input
   model: Keras Model API Object
   """
+ #y=np.c_[y, np.zeros(len(y))]
+  #print(y)
   grid = np.stack((x,y))
   grid = grid.T.reshape(-1,2)
   outs = model.predict(grid)
@@ -59,13 +61,13 @@ def plot_boundary(clf, X, y, grid_step=.01, poly_featurizer=None):
 
     # каждой точке в сетке [x_min, m_max]x[y_min, y_max]
     # ставим в соответствие свой цвет
-    Z = clf.predict((np.c_[xx.ravel(), yy.ravel()]))
+    Z = clf.predict(poly_featurizer.transform(np.c_[xx.ravel(), yy.ravel()]))
     Z = Z.reshape(xx.shape)
     plt.contour(xx, yy, Z, cmap=plt.cm.Paired)
     plt.show()
+    plt.savefig("output.png")
 
-
-def plot_decision_boundary(X, y, model, steps=1000, cmap='Paired'):
+def plot_decision_boundary(X, y, model, steps=1000,poly_featurizer=None, cmap='Paired'):
     """
     Function to plot the decision boundary and data points of a model.
     Data points are colored based on their actual label.
@@ -79,19 +81,20 @@ def plot_decision_boundary(X, y, model, steps=1000, cmap='Paired'):
     x_span = linspace(xmin, xmax, steps)
     y_span = linspace(ymin, ymax, steps)
     xx, yy = meshgrid(x_span, y_span)
-
     # Make predictions across region of interest
-    labels = model.predict(c_[xx.ravel(), yy.ravel()])
-
+    labels=None
+    if poly_featurizer is not None:
+        labels = model.predict(poly_featurizer.transform(c_[xx.ravel(), yy.ravel()]))
+    else:
+        labels = model.predict(c_[xx.ravel(), yy.ravel()])
     # Plot decision boundary in region of interest
     z = labels.reshape(xx.shape)
 
     fig, ax = plt.subplots()
-    train_labels = model.predict(X)
     ax.contourf(xx, yy, z, cmap=cmap, alpha=0.5)
 
     # Get predicted labels on training data and plot
-    train_labels = model.predict(X)
+    #train_labels = model.predict(X)
     ax.scatter(X[:,0], X[:,1], c=y.ravel(), cmap=cmap, lw=0)
 
     return fig, ax
@@ -179,9 +182,9 @@ def kd_model():
     # переданная в качестве аргумента активации, кернел — это матрица весов, созданная слоем,
     # а смещение — это вектор смещения, созданный слоем (применимо только в случае, если use_bias — True).
     model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, input_dim=xp.shape[1],
-                                    kernel_regularizer=regularizers.L1L2(l1=1e-5, l2=1e-4),
-    bias_regularizer=regularizers.L2(1e-4),
-    activity_regularizer=regularizers.L2(1e-5)))
+                                    kernel_regularizer=regularizers.L1L2(l1=1e-1, l2=1e-1),
+    bias_regularizer=regularizers.L2(1e-1),
+    activity_regularizer=regularizers.L2(1e-1)))
     #Компилируем модель оптимизатор= rmsprop
     #функция потерь бинарная энтропия
     model.compile(optimizer='rmsprop', loss='binary_crossentropy')
@@ -191,9 +194,10 @@ def kd_model():
     ans = model.predict(test_X)
     print("Предсказания")
     print(ans.ravel())
-    # fig, ax = plot_decision_boundary(X=x, y=y, model=model)
-    # fig.savefig("output.png")
-    #plot_boundary(model, x, y, grid_step=.01, poly_featurizer=poly)
+    #fig, ax = plot_decision_boundary(X=x, y=y, model=model,poly_featurizer=poly)
+    #fig.savefig("output.png")
+    plot_boundary(model, x, y, grid_step=.01, poly_featurizer=poly)
 
-lr()
-#kd_model()
+
+#lr()
+kd_model()

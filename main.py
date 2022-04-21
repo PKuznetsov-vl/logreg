@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 
-
+from tensorflow.keras import layers
 
 
 
@@ -111,9 +111,11 @@ def main():
     print(num_features)
     num_classes = train_Y.shape[0]
     print(num_classes)
+    # nm = layers.Normalization(input_shape=[1 ], axis=None)
+    # nm.adapt(num_features)
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(10, activation=tf.nn.softmax)
+
+        tf.keras.layers.Dense(units=1, activation=tf.nn.softmax)# activation = 'sigmoid'
     ])
 
     model.compile(optimizer='sgd',
@@ -123,37 +125,31 @@ def main():
     a = model.evaluate(test_X, test_Y)
     print(a)
     print(model.metrics_names)
-    ans = model.predict(test_X).flatten()
-    # plt.plot(test_X, ans, color='k', label='Predictions')
-
-    # x = tf.linspace(0.0, 250, 251)
+    ans = model.predict(test_X)
     print(ans)
-    print(test_X)
-
-    # plt.scatter(X1, y1, label='Data')
-    plt.plot(test_X[:1], ans, color='k', label='Predictions')
-    plt.xlabel('Horsepower')
-    plt.ylabel('MPG')
-    plt.legend()
 
 
-X, y = load_data('ex2data1.txt')
-print(X)
 
-C = 1e-2
-logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
-logit.fit(X, y)
+def lr():
+    X, y = load_data('ex2data1.txt')
+    print(X)
 
-#plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=poly)
+    C = 1e-2
+    logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
+    logit.fit(X, y)
 
-# plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='Выпущен')
-# plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='Бракован')
-# plt.xlabel("Тест 1")
-# plt.ylabel("Тест 2")
-# plt.title('2 теста микрочипов. Логит с C=0.01')
-# plt.legend();
+    # plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=poly)
 
-print("Доля правильных ответов классификатора на обучающей выборке:",
-round(logit.score(X, y), 3))
+    # plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='Выпущен')
+    # plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='Бракован')
+    # plt.xlabel("Тест 1")
+    # plt.ylabel("Тест 2")
+    # plt.title('2 теста микрочипов. Логит с C=0.01')
+    # plt.legend();
 
-print(logit.predict(X))
+    print("Доля правильных ответов классификатора на обучающей выборке:",
+          round(logit.score(X, y), 3))
+
+    print(logit.predict(X))
+
+main()

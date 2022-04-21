@@ -36,18 +36,18 @@ def load_data(path):
     # информация о наборе данных
     data.info()
     X = data.iloc[:, :2].values
-    print(X)
+    #print(X)
     y = data.iloc[:, 2].values
-    print(y)
+    #print(y)
 
-    plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='1')
-    plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='0')
+    plt.scatter(X[y == 1, 0], X[y == 1, 1], c='red', label='1')
+    plt.scatter(X[y == 0, 0], X[y == 0, 1], c='blue', label='0')
     plt.xlabel("Тест 1")
     plt.ylabel("Тест 2")
     plt.title('Ex2data1 нет нормализации')
     plt.legend()
     plt.plot()
-    #plt.show()
+    plt.show()
     return X,y
 
 
@@ -59,7 +59,7 @@ def plot_boundary(clf, X, y, grid_step=.01, poly_featurizer=None):
 
     # каждой точке в сетке [x_min, m_max]x[y_min, y_max]
     # ставим в соответствие свой цвет
-    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = clf.predict((np.c_[xx.ravel(), yy.ravel()]))
     Z = Z.reshape(xx.shape)
     plt.contour(xx, yy, Z, cmap=plt.cm.Paired)
     plt.show()
@@ -135,46 +135,65 @@ def main():
 
 def lr():
     X, y = load_data('ex2data1.txt')
-    print(X)
-
+    #print(X)
+    poly = PolynomialFeatures(degree=7)
+    xp = poly.fit_transform(X)
     C = 1e-2
     logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
     logit.fit(X, y)
 
-    plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=None)
 
-    plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='Выпущен')
-    plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='Бракован')
+
+    plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='1')
+    plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='0')
     plt.xlabel("Тест 1")
     plt.ylabel("Тест 2")
-    plt.title('2 теста микрочипов. Логит с C=0.01')
-    plt.legend();
+    plt.title('2 класса. Регуляризация с C=0.01')
+    plt.legend()
 
     print("Доля правильных ответов классификатора на обучающей выборке:",
           round(logit.score(X, y), 3))
 
     print(logit.predict(X))
 
+    plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=poly)
 
 def kd_model():
     x, y = load_data('ex2data1.txt')
-
-    train_X, test_X, test_Y, train_Y = train_test_split(x, y, random_state=15, test_size=0.5)
-
+    #полиномиальные признаки
+    poly = PolynomialFeatures(degree=7)
+    xp = poly.fit_transform(x)
+    #Добавляем регуляризацию
     from keras.regularizers import l1_l2
 
-    reg = l1_l2(l1=0.01, l2=0.1)
+    reg = l1_l2(l1=0.01, l2=0.01)
 
+    #разбиваем датасет
+    train_X, test_X, test_Y, train_Y = train_test_split(xp, y, random_state=15, test_size=0.5)
+    #создаем модель с бинарной классификацией
     model = tf.keras.models.Sequential()
+    #1 слой Выравнивает вход. Не влияет на размер партии.
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, input_dim=x.shape[1],
-                                    kernel_regularizer=regularizers.L1(0.00001),
-                                    activity_regularizer=regularizers.L2(0.000001)))
+    #2 слой Dense реализует операцию: output = activation(dot(input, kernel) + bias), где активация
+    # — это функция активации по элементам,
+    # переданная в качестве аргумента активации, кернел — это матрица весов, созданная слоем,
+    # а смещение — это вектор смещения, созданный слоем (применимо только в случае, если use_bias — True).
+    model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, input_dim=xp.shape[1],
+                                    kernel_regularizer=regularizers.L1L2(l1=1e-5, l2=1e-4),
+    bias_regularizer=regularizers.L2(1e-4),
+    activity_regularizer=regularizers.L2(1e-5)))
+    #Компилируем модель оптимизатор= rmsprop
+    #функция потерь бинарная энтропия
     model.compile(optimizer='rmsprop', loss='binary_crossentropy')
+    #тренируем модель  100 эпох
     model.fit(train_X, train_Y, epochs=100, verbose=1)
+    #выводим предсказания
     ans = model.predict(test_X)
-    print(ans)
-    fig, ax = plot_decision_boundary(x, y, model)
-    fig.savefig("output.png")
+    print("Предсказания")
+    print(ans.ravel())
+    # fig, ax = plot_decision_boundary(X=x, y=y, model=model)
+    # fig.savefig("output.png")
+    #plot_boundary(model, x, y, grid_step=.01, poly_featurizer=poly)
 
-lr()
+#lr()
+kd_model()

@@ -138,7 +138,7 @@ def lr():
     #print(X)
     poly = PolynomialFeatures(degree=7)
     xp = poly.fit_transform(X)
-    C = 1e-2
+    C = 0.0001
     logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
     logit.fit(X, y)
 
@@ -148,7 +148,7 @@ def lr():
     plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='0')
     plt.xlabel("Тест 1")
     plt.ylabel("Тест 2")
-    plt.title('2 класса. Регуляризация с C=0.01')
+    plt.title('2 класса. Регуляризация с C=0.0001')
     plt.legend()
 
     print("Доля правильных ответов классификатора на обучающей выборке:",
@@ -164,9 +164,9 @@ def kd_model():
     poly = PolynomialFeatures(degree=7)
     xp = poly.fit_transform(x)
     #Добавляем регуляризацию
-    from keras.regularizers import l1_l2
 
-    reg = l1_l2(l1=0.01, l2=0.01)
+
+
 
     #разбиваем датасет
     train_X, test_X, test_Y, train_Y = train_test_split(xp, y, random_state=15, test_size=0.5)
@@ -195,5 +195,5 @@ def kd_model():
     # fig.savefig("output.png")
     #plot_boundary(model, x, y, grid_step=.01, poly_featurizer=poly)
 
-#lr()
-kd_model()
+lr()
+#kd_model()

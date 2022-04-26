@@ -1,8 +1,14 @@
 import tensorflow as tf
+from keras import regularizers
+from keras.layers import Dense, Dropout, BatchNormalization, PReLU, Activation
+from keras.models import Sequential
+from keras.optimizer_experimental.sgd import SGD
+
+from keras.regularizers import l2
 from sklearn.model_selection import train_test_split
 import numpy as np
 #from mlxtend.plotting import plot_decision_regions
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -12,39 +18,69 @@ from utils.graphutils import plot_boundary, convert_image, plot_decision_boundar
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from tensorflow.keras import layers
+import tensorflow_datasets as tfds
+
+
+#from __future__ import print_function
+from keras.models import load_model
+import keras
+from keras.utils import np_utils
+from sklearn.datasets import load_iris
+#from sklearn import train_test_split
+from keras.models import Sequential
+from sklearn.linear_model import LogisticRegressionCV
+from keras.layers.core import Activation
+from keras.layers import Dense, Dropout, Activation
+#from keras.optimizers import RMSprop
+import numpy as np
+
+
 
 
 def main():
-    X1, y1 = load_data('ex2data1.txt')
+    iris = load_iris()
 
-    train_X, test_X, test_Y, train_Y = train_test_split(X1, y1, random_state=15, stratify=y1, test_size=0.5)
-    print(train_Y)
-    print(f"Количество строк в y_train по классам: {np.bincount(train_Y)}")
-    print(f"Количество строк в y_test по классам: {np.bincount(test_Y)}")
-    # train_X, train_Y, test_X, test_Y = load_data()
+    X, y = load_data('microchip_tests.txt')
+    poly = PolynomialFeatures(degree=7)
+    Xp = poly.fit_transform(X)
+    # Split both independent and dependent variables in half for cross-validation
+    train_X, test_X, train_y, test_y = train_test_split(Xp, y, train_size=0.5, random_state=0)
+    # print(type(train_X),len(train_y),len(test_X),len(test_y))
+    lr = LogisticRegressionCV()
+    lr.fit(train_X, train_y)
+    pred_y = lr.predict(test_X)
+    print("Test fraction correct (LR-Accuracy) = {:.2f}".format(lr.score(test_X, test_y)))
 
-    num_features = train_X.shape[1]
-    print(num_features)
-    num_classes = train_Y.shape[0]
-    print(num_classes)
-    # nm = layers.Normalization(input_shape=[1 ], axis=None)
-    # nm.adapt(num_features)
-    model = tf.keras.models.Sequential([
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(units=1, activation=tf.nn.sigmoid)# activation = 'sigmoid'
-    ])
+    # def one_hot_encode_object_array(arr):
+    #     uniques, ids = np.unique(arr, return_inverse=True)
+    #     return np_utils.to_categorical(ids, len(uniques))
+    #
+    # # Dividing data into train and test data
+    # train_y_ohe = one_hot_encode_object_array(train_y)
+    # test_y_ohe = one_hot_encode_object_array(test_y)
 
-    model.compile(optimizer='sgd',
-                  loss='binary_crossentropy',
-                  metrics=['accuracy'])
-    model.fit(X1, y1, epochs=512)
-    a = model.evaluate(test_X, test_Y)
-    print(a)
-    print(model.metrics_names)
-    ans = model.predict(test_X)
-    print(ans)
+    # Creating a model
+    model = Sequential()
+    model.add(Dense(1, input_dim=(Xp.shape[1]),kernel_initializer='random_normal',  kernel_regularizer=regularizers.L1(l1=0.01),
+    bias_initializer='zeros'))
+    model.add(Activation('sigmoid'))
+    # model.add(Dense(1))
+    # model.add(Activation('softmax'))
 
+    # Compiling the model
+    model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
 
+    # Actual modelling
+    model.fit(train_X, train_y, verbose=0, batch_size=1, epochs=150)
+
+    score, accuracy = model.evaluate(test_X, test_y, batch_size=16, verbose=0)
+
+    print("\n Test fraction correct (LR-Accuracy) logistic regression = {:.2f}".format(
+        lr.score(test_X, test_y)))  # Accuracy is 0.83
+    print("Test fraction correct (NN-Accuracy) keras  = {:.2f}".format(accuracy))  # Accuracy is 0.99
+    print(model.predict(test_X))
+    fig, ax = plot_decision_boundary(X=X, y=y, model=model, poly_featurizer=poly)
+    fig.savefig("output.png")
 
 def lr():
     X, y = load_data('ex2data1.txt')
@@ -73,43 +109,71 @@ def lr():
 
 
 def create_model(x):
+    x = np.array(x)
+    #
+
     #Добавляем регуляризацию
     # создаем модель с бинарной классификацией
     model = tf.keras.models.Sequential()
+    # normalizer = layers.Normalization(input_shape=[1, ], axis=None)
+    # normalizer.adapt(x)
+
+
     # 1 слой Выравнивает вход. Не влияет на размер партии.
-    model.add(tf.keras.layers.Flatten())
+
+    #model.add(tf.keras.layers.Flatten())
+    #model.add(normalizer)
+
+    #model.tf.keras.layers.experimental.preprocessing.Normalization.adapt(x)
     # 2 слой Dense реализует операцию: output = activation(dot(input, kernel) + bias), где активация
     # — это функция активации по элементам,
     # переданная в качестве аргумента активации, кернел — это матрица весов, созданная слоем,
     # а смещение — это вектор смещения, созданный слоем (применимо только в случае, если use_bias — True).
-    #model.add(tf.keras.layers.Dense(36, activation=tf.nn.relu, input_dim=x.shape[1]))
-    model.add(tf.keras.layers.Dense(1, activation=tf.nn.sigmoid,input_dim=x.shape[1]))
-                                    # kernel_regularizer=regularizers.L1L2(l1=1, l2=1),
+
+    #model.add(tf.keras.layers.Dense(x.shape[1], activation=tf.nn.relu, input_dim=x.shape[1]))
+    #model.add(tf.keras.layers.Dense(10))
+    model.add(tf.keras.layers.Dense(1, activation='sigmoid', input_dim=x.shape[1],
+                                    kernel_regularizer=regularizers.L1(l1=0.01), bias_initializer='zeros',kernel_initializer='random_normal'))
+
                                     # bias_regularizer=regularizers.L2(1),
-                                    # activity_regularizer=regularizers.L2(1)))
+                                    # activity_regularizer=regularizers.L1(0.01)))
     # Компилируем модель оптимизатор= rmsprop
     # функция потерь бинарная энтропия
 
+
+
+
+#еще способ
+    # layer = tf.keras.layers.experimental.preprocessing.Normalization()
+    # layer.adapt(train_X)
+    #
+    # model = tf.keras.Sequential(
+    #     [
+    #         layer,
+    #         tf.keras.layers.Dense(64, activation=tf.nn.relu, input_dim=xp.shape[1]),
+    #         tf.keras.layers.Dense(1, activation=tf.nn.sigmoid),
+    #     ]
+    # )
     return model
 
 
 def binary_model():
-    X, y = load_data('ex2data1.txt')
+    X, y = load_data('microchip_tests.txt')
     #полиномиальные признаки
-    poly = PolynomialFeatures(degree=9)
-    xp = poly.fit_transform(X)
+    poly = PolynomialFeatures(degree=7)
+    X = poly.fit_transform(X)
 
-    print(xp[0])
     #разбиваем датасет
-    train_X, test_X, test_Y, train_Y = train_test_split(xp, y, random_state=15, stratify=y, test_size=0.5)
+    train_X, test_X, test_Y, train_Y = train_test_split(X, y, random_state=15,  test_size=0.5)
     print(train_Y)
     print(f"Количество строк в y_train по классам: {np.bincount(train_Y)}")
     print(f"Количество строк в y_test по классам: {np.bincount(test_Y)}")
 
     model=create_model(train_X)
-    model.compile(optimizer='rmsprop',loss='binary_crossentropy' ,metrics=['binary_accuracy'])#loss='binary_crossentropy'
+    model.compile(optimizer='adam',loss='binary_crossentropy' ,metrics=['binary_accuracy'])#loss='binary_crossentropy'
     # тренируем модель  100 эпох
-    model.fit(train_X, train_Y, epochs=100, verbose=1)
+    model.fit(train_X, train_Y, verbose=0, batch_size=1, epochs=150)
+    #model.fit(train_X, train_Y, epochs=100, verbose=1)
     #выводим предсказания
     ans = model.predict(test_X)
     print("Предсказания")
@@ -118,19 +182,17 @@ def binary_model():
     fig.savefig("output.png")
 
 
-
-
-
-
-
-
-
 def digits_class_low():
     x_train,x_test,y_train_new,y_test_new=getmnist()
     model=create_model(x_train)
-    model.compile(optimizer='sgd', loss='binary_crossentropy', metrics=['binary_accuracy'])
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(0.001),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
+    )
+
     # тренируем модель  100 эпох
-    model.fit(x_train, y_train_new, epochs=5, verbose=1,shuffle=True)
+    model.fit(x_train, y_train_new, epochs=10, verbose=1,shuffle=True)
     #смотрим точность обучения
     print(model.metrics_names)
     print(model.evaluate(x_test,y_test_new))
@@ -143,17 +205,18 @@ def digits_class_low():
     #fig.savefig("output.png")
 
 if __name__ == '__main__':
-    digits_class_low()
-    model = tf.keras.models.load_model(r'./logisticRegressionKeras.hdf5')
-    im = convert_image('0.png')
-    plt.imshow(im)
-    plt.show()
-    #lr()
-    #binary_model()
-    predict_input = im.reshape((-1, 784))
-    prediction = model.predict(predict_input)
-    print(prediction)
-
-
+    def   img():
+        #digits_class_low()
+        model = tf.keras.models.load_model(r'./logisticRegressionKeras.hdf5')
+        im = convert_image('4.png')
+        plt.imshow(im)
+        plt.show()
+        predict_input = im.reshape((-1, 784))
+        prediction = model.predict(predict_input)
+        print(prediction)
+#img()
+#lr()
+binary_model()
+#main()
 
 

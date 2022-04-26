@@ -38,18 +38,18 @@ import numpy as np
 
 
 def main():
-    iris = load_iris()
-
     X, y = load_data('microchip_tests.txt')
     poly = PolynomialFeatures(degree=7)
     Xp = poly.fit_transform(X)
     # Split both independent and dependent variables in half for cross-validation
     train_X, test_X, train_y, test_y = train_test_split(Xp, y, train_size=0.5, random_state=0)
     # print(type(train_X),len(train_y),len(test_X),len(test_y))
-    lr = LogisticRegressionCV()
-    lr.fit(train_X, train_y)
-    pred_y = lr.predict(test_X)
-    print("Test fraction correct (LR-Accuracy) = {:.2f}".format(lr.score(test_X, test_y)))
+
+    # lr = LogisticRegressionCV()
+    # lr.fit(train_X, train_y)
+    # pred_y = lr.predict(test_X)
+    # print(pred_y)
+    # print("Test fraction correct (LR-Accuracy) = {:.2f}".format(lr.score(test_X, test_y)))
 
     # def one_hot_encode_object_array(arr):
     #     uniques, ids = np.unique(arr, return_inverse=True)
@@ -61,7 +61,8 @@ def main():
 
     # Creating a model
     model = Sequential()
-    model.add(Dense(1, input_dim=(Xp.shape[1]),kernel_initializer='random_normal',  kernel_regularizer=regularizers.L1(l1=0.01),
+    model.add(Dense(1, input_dim=(Xp.shape[1]),kernel_initializer='random_normal',
+                    kernel_regularizer=regularizers.L1(l1=0.01),
     bias_initializer='zeros'))
     model.add(Activation('sigmoid'))
     # model.add(Dense(1))
@@ -75,8 +76,8 @@ def main():
 
     score, accuracy = model.evaluate(test_X, test_y, batch_size=16, verbose=0)
 
-    print("\n Test fraction correct (LR-Accuracy) logistic regression = {:.2f}".format(
-        lr.score(test_X, test_y)))  # Accuracy is 0.83
+    # print("\n Test fraction correct (LR-Accuracy) logistic regression = {:.2f}".format(
+    #     lr.score(test_X, test_y)))  # Accuracy is 0.83
     print("Test fraction correct (NN-Accuracy) keras  = {:.2f}".format(accuracy))  # Accuracy is 0.99
     print(model.predict(test_X))
     fig, ax = plot_decision_boundary(X=X, y=y, model=model, poly_featurizer=poly)
@@ -109,12 +110,12 @@ def lr():
 
 
 def create_model(x):
-    x = np.array(x)
+    #x = np.array(x)
     #
 
     #Добавляем регуляризацию
     # создаем модель с бинарной классификацией
-    model = tf.keras.models.Sequential()
+    model = keras.models.Sequential()
     # normalizer = layers.Normalization(input_shape=[1, ], axis=None)
     # normalizer.adapt(x)
 
@@ -132,9 +133,9 @@ def create_model(x):
 
     #model.add(tf.keras.layers.Dense(x.shape[1], activation=tf.nn.relu, input_dim=x.shape[1]))
     #model.add(tf.keras.layers.Dense(10))
-    model.add(tf.keras.layers.Dense(1, activation='sigmoid', input_dim=x.shape[1],
-                                    kernel_regularizer=regularizers.L1(l1=0.01), bias_initializer='zeros',kernel_initializer='random_normal'))
-
+    model.add(keras.layers.Dense(1, activation='sigmoid', input_dim=x.shape[1], kernel_regularizer=regularizers.L1(l1=0.01),
+                                   bias_initializer='zeros',kernel_initializer='random_normal'))
+                                     #kernel_regularizer = regularizers.L1(l1=0.01),
                                     # bias_regularizer=regularizers.L2(1),
                                     # activity_regularizer=regularizers.L1(0.01)))
     # Компилируем модель оптимизатор= rmsprop
@@ -161,23 +162,27 @@ def binary_model():
     X, y = load_data('microchip_tests.txt')
     #полиномиальные признаки
     poly = PolynomialFeatures(degree=7)
-    X = poly.fit_transform(X)
+    Xp = poly.fit_transform(X)
 
     #разбиваем датасет
-    train_X, test_X, test_Y, train_Y = train_test_split(X, y, random_state=15,  test_size=0.5)
-    print(train_Y)
-    print(f"Количество строк в y_train по классам: {np.bincount(train_Y)}")
-    print(f"Количество строк в y_test по классам: {np.bincount(test_Y)}")
+    train_X, test_X, train_y, test_y = train_test_split(Xp, y, train_size=0.5, random_state=0)
 
-    model=create_model(train_X)
-    model.compile(optimizer='adam',loss='binary_crossentropy' ,metrics=['binary_accuracy'])#loss='binary_crossentropy'
-    # тренируем модель  100 эпох
-    model.fit(train_X, train_Y, verbose=0, batch_size=1, epochs=150)
+    print(f"Количество строк в y_train по классам: {np.bincount(train_y)}")
+    print(f"Количество строк в y_test по классам: {np.bincount(test_y)}")
+    model=create_model(Xp)
+    model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
+    model.fit(train_X, train_y, verbose=1, batch_size=1, epochs=180)
     #model.fit(train_X, train_Y, epochs=100, verbose=1)
     #выводим предсказания
-    ans = model.predict(test_X)
-    print("Предсказания")
-    print(ans.ravel())
+    score, accuracy = model.evaluate(test_X, test_y, batch_size=16, verbose=0)
+
+    # print("\n Test fraction correct (LR-Accuracy) logistic regression = {:.2f}".format(
+    #     lr.score(test_X, test_y)))  # Accuracy is 0.83
+    print("Test fraction correct (NN-Accuracy) keras  = {:.2f}".format(accuracy))  # Accuracy is 0.99
+
+
+    #print("Предсказания")
+    #print(model.predict(test_X).ravel())
     fig, ax = plot_decision_boundary(X=X, y=y, model=model,poly_featurizer=poly)
     fig.savefig("output.png")
 
@@ -218,5 +223,7 @@ if __name__ == '__main__':
 #lr()
 binary_model()
 #main()
+
+
 
 

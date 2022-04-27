@@ -189,7 +189,7 @@ def binary_model():
     model.add(tf.keras.layers.Dense(Xp.shape[1]*2,activation=tf.nn.relu))
     #model.add(tf.keras.layers.Dense(Xp.shape[1]*2)),
     model.add(
-        keras.layers.Dense(1, activation='sigmoid', input_dim=Xp.shape[1]/4,
+        keras.layers.Dense(1, activation='sigmoid', input_dim=Xp.shape[1]/2,
                            kernel_regularizer=regularizers.L1(l1=0.01),
                            activity_regularizer=regularizers.L1(0.01),
                            bias_initializer='zeros', kernel_initializer='random_normal'))

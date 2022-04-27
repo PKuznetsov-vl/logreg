@@ -161,7 +161,7 @@ def create_model(x):
 def binary_model():
     X, y = load_data('microchip_tests.txt')
     #полиномиальные признаки
-    poly = PolynomialFeatures(degree=7)
+    poly = PolynomialFeatures(degree=5)
     Xp = poly.fit_transform(X)
 
     #разбиваем датасет
@@ -169,12 +169,36 @@ def binary_model():
 
     print(f"Количество строк в y_train по классам: {np.bincount(train_y)}")
     print(f"Количество строк в y_test по классам: {np.bincount(test_y)}")
-    model=create_model(Xp)
+    #Последовательная модель
+    model = keras.models.Sequential()
+    # normalizer = layers.Normalization(input_shape=[1, ], axis=None)
+    # normalizer.adapt(x)
+
+    # 1 слой Выравнивает вход. Не влияет на размер партии.
+
+    model.add(tf.keras.layers.Flatten())
+    # model.add(normalizer)
+
+    # model.tf.keras.layers.experimental.preprocessing.Normalization.adapt(x)
+    # 2 слой Dense реализует операцию: output = activation(dot(input, kernel) + bias), где активация
+    # — это функция активации по элементам,
+    # переданная в качестве аргумента активации, кернел — это матрица весов, созданная слоем,
+    # а смещение — это вектор смещения, созданный слоем (применимо только в случае, если use_bias — True).
+
+    model.add(tf.keras.layers.Dense(Xp.shape[1], activation=tf.nn.relu, input_dim=Xp.shape[1]))
+    model.add(tf.keras.layers.Dense(Xp.shape[1]*2,activation=tf.nn.relu))
+    model.add(tf.keras.layers.Dense(Xp.shape[1]*4)),
+    model.add(
+        keras.layers.Dense(1, activation='sigmoid', input_dim=Xp.shape[1]*4, kernel_regularizer=regularizers.L1(l1=0.001),
+                           activity_regularizer=regularizers.L1(0.001),
+                           bias_initializer='zeros', kernel_initializer='random_normal'))
+    #model.add(Dense(1,activation=tf.nn.relu))
+
     model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
-    model.fit(train_X, train_y, verbose=1, batch_size=1, epochs=180)
+    model.fit(train_X, train_y, verbose=1, batch_size=1, epochs=150)
     #model.fit(train_X, train_Y, epochs=100, verbose=1)
     #выводим предсказания
-    score, accuracy = model.evaluate(test_X, test_y, batch_size=16, verbose=0)
+    score, accuracy = model.evaluate(Xp, y, batch_size=16, verbose=0)
 
     # print("\n Test fraction correct (LR-Accuracy) logistic regression = {:.2f}".format(
     #     lr.score(test_X, test_y)))  # Accuracy is 0.83

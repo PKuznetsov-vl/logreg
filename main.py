@@ -187,15 +187,16 @@ def binary_model():
 
     model.add(tf.keras.layers.Dense(Xp.shape[1], activation=tf.nn.relu, input_dim=Xp.shape[1]))
     model.add(tf.keras.layers.Dense(Xp.shape[1]*2,activation=tf.nn.relu))
-    model.add(tf.keras.layers.Dense(Xp.shape[1]*4)),
+    #model.add(tf.keras.layers.Dense(Xp.shape[1]*2)),
     model.add(
-        keras.layers.Dense(1, activation='sigmoid', input_dim=Xp.shape[1]*4, kernel_regularizer=regularizers.L1(l1=0.001),
-                           activity_regularizer=regularizers.L1(0.001),
+        keras.layers.Dense(1, activation='sigmoid', input_dim=Xp.shape[1]/4,
+                           kernel_regularizer=regularizers.L1(l1=0.01),
+                           activity_regularizer=regularizers.L1(0.01),
                            bias_initializer='zeros', kernel_initializer='random_normal'))
     #model.add(Dense(1,activation=tf.nn.relu))
 
     model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
-    model.fit(train_X, train_y, verbose=1, batch_size=1, epochs=150)
+    model.fit(train_X, train_y, verbose=1, batch_size=1, epochs=100)
     #model.fit(train_X, train_Y, epochs=100, verbose=1)
     #выводим предсказания
     score, accuracy = model.evaluate(Xp, y, batch_size=16, verbose=0)

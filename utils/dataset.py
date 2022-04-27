@@ -49,6 +49,6 @@ def load_data(path):
     plt.legend()
     plt.plot()
     #X = scaler.fit_transform(X)
-    print(X)
+    #print(X)
     #plt.show()
     return X,y

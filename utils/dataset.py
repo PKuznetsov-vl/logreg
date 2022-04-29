@@ -50,5 +50,5 @@ def load_data(path):
     plt.plot()
     #X = scaler.fit_transform(X)
     #print(X)
-    #plt.show()
+    plt.show()
     return X,y

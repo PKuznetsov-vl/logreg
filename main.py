@@ -7,7 +7,7 @@ from keras.optimizer_experimental.sgd import SGD
 from keras.regularizers import l2
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
-import numpy as np
+
 # from mlxtend.plotting import plot_decision_regions
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
@@ -19,8 +19,9 @@ from utils.graphutils import plot_boundary, convert_image, plot_decision_boundar
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+
 from tensorflow.keras import layers
-import tensorflow_datasets as tfds
+#import tensorflow_datasets as tfds
 
 # from __future__ import print_function
 from keras.models import load_model
@@ -36,12 +37,13 @@ from keras.layers import Dense, Dropout, Activation
 import numpy as np
 
 
-def first_model():
+def first_model(path,poly=None):
 
-    X, y = load_data('ex2data1.txt')
-    # полиномиальные признаки
-    # poly = PolynomialFeatures(degree=3)
-    # Xp = poly.fit_transform(X)
+    X, y = load_data('ex2data1.txt','Ex2data1 нет нормализации')
+    if poly:
+        # полиномиальные признаки
+        #poly = PolynomialFeatures(degree=3)
+        X = poly.fit_transform(X)
 
     # разбиваем датасет
     train_X, test_X, train_y, test_y = train_test_split(X, y, train_size=0.5, random_state=1)
@@ -51,33 +53,37 @@ def first_model():
     model.add(tf.keras.layers.Dense(16, activation=tf.nn.relu, input_dim=X.shape[1]))
     # bias_initializer='zeros', kernel_initializer='random_normal'))
     # model.add(tf.keras.layers.Dropout(0.6))
-    model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu))
+   # model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu))
     model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
     # model.add(tf.keras.layers.Dropout(0.6))
     model.add(
-        keras.layers.Dense(1, activation='sigmoid', input_dim=4, kernel_regularizer=regularizers.L1(l1=0.001),
+        keras.layers.Dense(1, activation='sigmoid', input_dim=4, kernel_regularizer=regularizers.L1(l1=0.0000001),
                            bias_initializer='zeros', kernel_initializer='random_normal'))
 
     # Compiling the model
     model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer='adam')
 
     # Actual modelling
-    model.fit(train_X, train_y, verbose=0, batch_size=1, epochs=200)
+    model.fit(train_X, train_y, verbose=1,batch_size=1, epochs=180)
 
     score, accuracy = model.evaluate(X, y, batch_size=16, verbose=0)
 
 
     print("Test fraction correct (NN-Accuracy) keras  = {:.2f}".format(accuracy))  # Accuracy is 0.99
     # print(model.predict(test_X))
-    fig, ax = plot_decision_boundary(X=X, y=y, model=model, poly_featurizer=None)
-    fig.savefig("output.png")
 
+    if poly:
+        fig, ax = plot_decision_boundary(X=X, y=y, model=model, poly_featurizer=poly)
+    else:
+        fig, ax = plot_decision_boundary(X=X, y=y, model=model, poly_featurizer=None)
+    fig.savefig(path)
+    plot_boundary(model, X, y, grid_step=.01, poly_featurizer=None)
 
 def microchips_lr():
-    X, y = load_data('microchip_tests.txt')
+    X, y = load_data('ex2data1.txt','Ex2data2 нет нормализации')
     # print(X)
-    poly = PolynomialFeatures(degree=7)
-    xp = poly.fit_transform(X)
+    # poly = PolynomialFeatures(degree=7)
+    # xp = poly.fit_transform(X)
     C = 0.0001
     logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
     logit.fit(X, y)
@@ -94,7 +100,7 @@ def microchips_lr():
 
     print(logit.predict(X))
 
-    plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=poly)
+    plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=None)
 
 
 def create_model(X):
@@ -196,5 +202,15 @@ def digits_class_low():
 
 
 if __name__ == '__main__':
-    microchops_nn()
+    def fst_task():
+        #сравинить с ski-kit
+        #microchips_lr()
+        #print('работа модели на датсете ex2data1.txt')
+        first_model(path='1.png')
+        # print('работа модели на датсете ex2data1.txt c полиномиальными признаками 3ей степени')
+        # poly = PolynomialFeatures(degree=2)
+        # first_model(poly=poly,path='2.png')
+        # print('работа модели на датсете ex2data2.txt c полиномиальными признаками 9ой степени')
+        # microchops_nn()
 
+    fst_task()

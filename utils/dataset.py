@@ -26,7 +26,7 @@ def getmnist():
     return x_train_final, x_test_final, y_train_new, y_test_new
 
 
-def load_data(path):
+def load_data(path,title):
     data = pd.read_csv(path,
                        header=None, names=('test1', 'test2', 'released'))
     # информация о наборе данных
@@ -45,10 +45,10 @@ def load_data(path):
     plt.scatter(X[y == 0, 0], X[y == 0, 1], c='blue', label='0')
     plt.xlabel("Тест 1")
     plt.ylabel("Тест 2")
-    plt.title('Ex2data1 нет нормализации')
+    plt.title(title)#
     plt.legend()
     plt.plot()
     #X = scaler.fit_transform(X)
     #print(X)
-    plt.show()
+    #plt.show()
     return X,y

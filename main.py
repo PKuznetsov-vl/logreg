@@ -82,23 +82,24 @@ def first_model(path,poly=None):
 def microchips_lr():
     X, y = load_data('ex2data1.txt','Ex2data2 нет нормализации')
     # print(X)
-    # poly = PolynomialFeatures(degree=7)
-    # xp = poly.fit_transform(X)
+    # poly = PolynomialFeatures(degree=3)
+    # Xp = poly.fit_transform(X)
+    Xp=X
     C = 0.0001
     logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
-    logit.fit(X, y)
+    logit.fit(Xp, y)
 
-    plt.scatter(X[y == 1, 0], X[y == 1, 1], c='green', label='1')
-    plt.scatter(X[y == 0, 0], X[y == 0, 1], c='red', label='0')
+    plt.scatter(X[y == 1, 0], X[y == 1, 1], c='red', label='1')
+    plt.scatter(X[y == 0, 0], X[y == 0, 1], c='blue', label='0')
     plt.xlabel("Тест 1")
     plt.ylabel("Тест 2")
-    plt.title('2 класса. Регуляризация с C=0.0001')
+    plt.title('2 класса. Регуляризация с C=0.0001 ')
     plt.legend()
 
     print("Доля правильных ответов классификатора на обучающей выборке:",
-          round(logit.score(X, y), 3))
+          round(logit.score(Xp, y), 3))
 
-    print(logit.predict(X))
+    print(logit.predict(Xp))
 
     plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=None)
 
@@ -204,9 +205,9 @@ def digits_class_low():
 if __name__ == '__main__':
     def fst_task():
         #сравинить с ski-kit
-        #microchips_lr()
-        #print('работа модели на датсете ex2data1.txt')
-        first_model(path='1.png')
+        microchips_lr()
+        print('работа модели на датсете ex2data1.txt')
+        #first_model(path='1.png')
         # print('работа модели на датсете ex2data1.txt c полиномиальными признаками 3ей степени')
         # poly = PolynomialFeatures(degree=2)
         # first_model(poly=poly,path='2.png')

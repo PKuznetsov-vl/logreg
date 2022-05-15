@@ -82,9 +82,8 @@ def first_model(path,poly=None):
 def microchips_lr():
     X, y = load_data('ex2data1.txt','Ex2data2 нет нормализации')
     # print(X)
-    # poly = PolynomialFeatures(degree=3)
-    # Xp = poly.fit_transform(X)
-    Xp=X
+    poly = PolynomialFeatures(degree=3)
+    Xp = poly.fit_transform(X)
     C = 0.0001
     logit = LogisticRegression(C=C, n_jobs=-1, random_state=17)
     logit.fit(Xp, y)
@@ -101,7 +100,7 @@ def microchips_lr():
 
     print(logit.predict(Xp))
 
-    plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=None)
+    plot_boundary(logit, X, y, grid_step=.01, poly_featurizer=poly)
 
 
 def create_model(X):
@@ -150,7 +149,7 @@ def create_model(X):
 
 
 def microchops_nn():
-    X, y = load_data('microchip_tests.txt')
+    X, y = load_data('microchip_tests.txt','tst')
     # полиномиальные признаки
     poly = PolynomialFeatures(degree=7)
     Xp = poly.fit_transform(X)
@@ -205,13 +204,13 @@ def digits_class_low():
 if __name__ == '__main__':
     def fst_task():
         #сравинить с ski-kit
-        microchips_lr()
-        print('работа модели на датсете ex2data1.txt')
+        # microchips_lr()
+        # print('работа модели на датсете ex2data1.txt')
         #first_model(path='1.png')
         # print('работа модели на датсете ex2data1.txt c полиномиальными признаками 3ей степени')
         # poly = PolynomialFeatures(degree=2)
         # first_model(poly=poly,path='2.png')
-        # print('работа модели на датсете ex2data2.txt c полиномиальными признаками 9ой степени')
-        # microchops_nn()
+        print('работа модели на датсете ex2data2.txt c полиномиальными признаками 9ой степени')
+        microchops_nn()
 
     fst_task()

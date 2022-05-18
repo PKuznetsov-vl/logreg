@@ -176,32 +176,10 @@ def microchops_nn():
     fig.savefig("micro.png")
 
 
-def digits_class_low():
-    x_train, x_test, y_train_new, y_test_new = getmnist()
-    model = create_model(x_train)
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(0.001),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
-    )
-
-    # тренируем модель  100 эпох
-    model.fit(x_train, y_train_new, epochs=10, verbose=1, shuffle=True)
-    # смотрим точность обучения
-    print(model.metrics_names)
-    print(model.evaluate(x_test, y_test_new))
-    # выводим предсказания
-    ans = model.predict(x_test)
-    print("Предсказания")
-    print(ans.ravel())
-    model.save(r'./logisticRegressionKeras.hdf5')
-    # fig, ax = plot_decision_boundary(X=x, y=y, model=model, poly_featurizer=poly)
-    # fig.savefig("output.png")
 
 
 if __name__ == '__main__':
-    def fst_task():
-        #сравинить с ski-kit
+    #сравинить с ski-kit
         # microchips_lr()
         # print('работа модели на датсете ex2data1.txt')
         #first_model(path='1.png')
@@ -210,5 +188,3 @@ if __name__ == '__main__':
         # first_model(poly=poly,path='2.png')
         print('работа модели на датсете ex2data2.txt c полиномиальными признаками 9ой степени')
         microchops_nn()
-
-    fst_task()

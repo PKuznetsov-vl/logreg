@@ -51,9 +51,7 @@ def first_model(path,poly=None):
     model = Sequential()
     # model.add(Dense(1))
     model.add(tf.keras.layers.Dense(16, activation=tf.nn.relu, input_dim=X.shape[1]))
-    # bias_initializer='zeros', kernel_initializer='random_normal'))
-    # model.add(tf.keras.layers.Dropout(0.6))
-   # model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu))
+
     model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu))
     # model.add(tf.keras.layers.Dropout(0.6))
     model.add(
